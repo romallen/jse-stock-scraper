@@ -1,9 +1,17 @@
+from pymongo.message import _first_batch
 import requests
 from bs4 import BeautifulSoup
 import json
 from dotenv import load_dotenv
 import os
 from requests.sessions import Request
+import pickle
+import pandas as pd
+from itertools import islice
+
+from dotenv import load_dotenv
+import os
+import pymongo
 
 load_dotenv()
 
@@ -41,38 +49,88 @@ login_response = session.post(
 
 
 response = session.get(
-    "https://mymoneyja.com/market/api", headers=headers, data=data, cookies=cookies
+    "https://mymoneyja.com/stock/FESCO", headers=headers, data=data, cookies=cookies
 )
 
 # get scaped data
 stock_data = json.loads(response.content)
 
-company = {}
-# puts each company in a dictionary
-for comp in stock_data:
-    company[comp["ticker"]] = comp
+companies = {}
+# gets the companies ticker
+for comp in stock_data["props"]["companies"]:
+    companies[comp["ticker"]] = True
 
 
-# response2 = session.get(
-#     "https://mymoneyja.com/stock/GK", headers=headers, data=data, cookies=cookies
-# )
-# soup = BeautifulSoup(response2.content, "html.parser")
-# stock_data = json.loads(soup.text)
-# company["GK"] = stock_data
+# splits companies dictionary
+def split_dict_equally(input_dict, chunks=4):
+    "Splits dict by keys. Returns a list of dictionaries."
+    # prep with empty dicts
+    return_list = [dict() for idx in range(chunks)]
+    idx = 0
+    for k, v in input_dict.items():
+        return_list[idx][k] = v
+        if idx < chunks - 1:  # indexes start at 0
+            idx += 1
+        else:
+            idx = 0
+    return return_list
 
-for key in company:
-    response2 = session.get(
-        "https://mymoneyja.com/stock/{0}".format(key),
-        headers=headers,
-        data=data,
-        cookies=cookies,
-    )
-    soup = BeautifulSoup(response2.content, "html.parser")
-    # div_data = soup.find("div", id="app")
-    stock_data = json.loads(soup.text)
-    # stock_data = json.loads(div_data["data-page"])
 
-    company[key] = stock_data
+dictionaries = split_dict_equally(companies, 4)
+# first_comp = dict(list(company.items())[len(company) // 2 :])
+# second_comp = dict(list(company.items())[: len(company) // 2])
 
-# print(soup)
-print(company["GK"])
+
+def get_data(dictionary):
+    for key in dictionary:
+        print(key)
+        response2 = session.get(
+            "https://mymoneyja.com/stock/{0}".format(key),
+            headers=headers,
+            data=data,
+            cookies=cookies,
+        )
+        soup = BeautifulSoup(response2.content, "html.parser")
+        # div_data = soup.find("div", id="app")
+        stock_data = json.loads(soup.text)
+        # stock_data = json.loads(div_data["data-page"])
+
+        dictionary[key] = stock_data["props"]["company"]
+
+
+for dictionary in dictionaries:
+    get_data(dictionary)
+
+
+# print(dictionaries)
+# for key in second_comp:
+#     print(key)
+#     response2 = session.get(
+#         "https://mymoneyja.com/stock/{0}".format(key),
+#         headers=headers,
+#         data=data,
+#         cookies=cookies,
+#     )
+#     soup = BeautifulSoup(response2.content, "html.parser")
+#     stock_data = json.loads(soup.text)
+#     second_comp[key] = stock_data["props"]["company"]
+
+
+# comp = json.dumps(company)
+
+# file_data = open("jse_stock_data.json", "wb")
+# pickle.dump(comp, file_data)
+
+
+client = pymongo.MongoClient(os.environ.get("DB_URL"))
+db = client["jse"]
+col = db["stocks"]
+x = col.insert_many(dictionaries)
+print(x)
+# first_comp = dict(list(company.items())[len(company) // 2 :])
+# second_comp = dict(list(company.items())[: len(company) // 2])
+
+# x1 = col.insert_one(first_comp)
+# print(x1)
+# x2 = col.insert_one(second_comp)
+# print(x2)
