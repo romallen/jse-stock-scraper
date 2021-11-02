@@ -5,12 +5,8 @@ import json
 from dotenv import load_dotenv
 import os
 from requests.sessions import Request
-import pickle
 import pandas as pd
 from itertools import islice
-
-from dotenv import load_dotenv
-import os
 import pymongo
 
 load_dotenv()
@@ -76,9 +72,7 @@ def split_dict_equally(input_dict, chunks=4):
     return return_list
 
 
-dictionaries = split_dict_equally(companies, 4)
-# first_comp = dict(list(company.items())[len(company) // 2 :])
-# second_comp = dict(list(company.items())[: len(company) // 2])
+dictionaries = split_dict_equally(companies, 5)
 
 
 def get_data(dictionary):
@@ -91,10 +85,8 @@ def get_data(dictionary):
             cookies=cookies,
         )
         soup = BeautifulSoup(response2.content, "html.parser")
-        # div_data = soup.find("div", id="app")
+        
         stock_data = json.loads(soup.text)
-        # stock_data = json.loads(div_data["data-page"])
-
         dictionary[key] = stock_data["props"]["company"]
 
 
@@ -102,35 +94,8 @@ for dictionary in dictionaries:
     get_data(dictionary)
 
 
-# print(dictionaries)
-# for key in second_comp:
-#     print(key)
-#     response2 = session.get(
-#         "https://mymoneyja.com/stock/{0}".format(key),
-#         headers=headers,
-#         data=data,
-#         cookies=cookies,
-#     )
-#     soup = BeautifulSoup(response2.content, "html.parser")
-#     stock_data = json.loads(soup.text)
-#     second_comp[key] = stock_data["props"]["company"]
-
-
-# comp = json.dumps(company)
-
-# file_data = open("jse_stock_data.json", "wb")
-# pickle.dump(comp, file_data)
-
-
 client = pymongo.MongoClient(os.environ.get("DB_URL"))
 db = client["jse"]
 col = db["stocks"]
 x = col.insert_many(dictionaries)
 print(x)
-# first_comp = dict(list(company.items())[len(company) // 2 :])
-# second_comp = dict(list(company.items())[: len(company) // 2])
-
-# x1 = col.insert_one(first_comp)
-# print(x1)
-# x2 = col.insert_one(second_comp)
-# print(x2)
