@@ -5,8 +5,6 @@ import json
 from dotenv import load_dotenv
 import os
 from requests.sessions import Request
-import pandas as pd
-from itertools import islice
 import pymongo
 
 load_dotenv()
@@ -43,21 +41,22 @@ login_response = session.post(
     "https://mymoneyja.com/login", headers=headers, cookies=cookies, data=data
 )
 
-
+# used to get list of company tickers
 response = session.get(
-    "https://mymoneyja.com/stock/FESCO", headers=headers, data=data, cookies=cookies
+    "https://mymoneyja.com/stock/138SL", headers=headers, data=data, cookies=cookies
 )
 
 # get scaped data
 stock_data = json.loads(response.content)
 
 companies = {}
-# gets the companies ticker
+companies["138SL"] = True
+# saves the companies tickers in a dictionary
 for comp in stock_data["props"]["companies"]:
     companies[comp["ticker"]] = True
 
 
-# splits companies dictionary
+# splits companies dictionary. This is done because MongoDB as a size limit on each collection
 def split_dict_equally(input_dict, chunks=4):
     "Splits dict by keys. Returns a list of dictionaries."
     # prep with empty dicts
@@ -72,30 +71,48 @@ def split_dict_equally(input_dict, chunks=4):
     return return_list
 
 
-dictionaries = split_dict_equally(companies, 5)
-
-
+num_comp = len(companies)
+dictionaries = split_dict_equally(companies, num_comp)
+test = []
+# populates dictionary with trade data
 def get_data(dictionary):
-    for key in dictionary:
-        print(key)
-        response2 = session.get(
-            "https://mymoneyja.com/stock/{0}".format(key),
-            headers=headers,
-            data=data,
-            cookies=cookies,
-        )
-        soup = BeautifulSoup(response2.content, "html.parser")
-        
-        stock_data = json.loads(soup.text)
-        dictionary[key] = stock_data["props"]["company"]
+    key = list(dictionary.keys())
+    key = key[0]
+    print(key)
+    response2 = session.get(
+        "https://mymoneyja.com/stock/{0}".format(key),
+        headers=headers,
+        data=data,
+        cookies=cookies,
+    )
+    soup = BeautifulSoup(response2.content, "html.parser")
+    stock_data = json.loads(soup.text)
+    key = {}
+    key["data"] = stock_data["props"]["company"]
+    # dictionary[key] = stock_data["props"]["company"]
+    # creates a price/volume key to store combined  ohlc and volume data
+    pv = []
+    for i in range(len(stock_data["props"]["company"]["data"]["ohlc"])):
+        price = stock_data["props"]["company"]["data"]["ohlc"]
+        volume = stock_data["props"]["company"]["data"]["volume"]
+        price[i].append(volume[i]["y"])
+        pv.append(price[i])
+    # dictionary[key]["pv"] = pv
+    key["pv"] = pv
+    test.append(key)
 
 
 for dictionary in dictionaries:
     get_data(dictionary)
+# k = list(dictionaries[0].keys())
+# print(dictionaries[0]["pv"])
 
 
+# uploads dictionaries as a collection to MongoDb
 client = pymongo.MongoClient(os.environ.get("DB_URL"))
 db = client["jse"]
-col = db["stocks"]
-x = col.insert_many(dictionaries)
+col = db["companies"]
+
+# x = col.insert_one(dictionaries[0])
+x = col.insert_many(test)
 print(x)
