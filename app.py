@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 
 app = dash.Dash(__name__)
-
+server = app.server
 load_dotenv()
 client = pymongo.MongoClient(os.environ.get("DB_URL"))
 db = client["jse"]
