@@ -12,9 +12,9 @@ import mplfinance as mpf
 import os
 from dotenv import load_dotenv
 
-
-app = dash.Dash(__name__)
-application = app.server
+external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
 app.title = "JSE CHART VIEWER"
 
 
@@ -30,9 +30,6 @@ for tick in get_tickers:
     company_list.append(
         {"label": tick["data"]["ticker"], "value": tick["data"]["ticker"]}
     )
-
-
-# print(company_list)
 
 
 # df = create_df("FESCO")
