@@ -19,7 +19,7 @@ app.title = "JSE CHART VIEWER"
 
 
 load_dotenv()
-client = pymongo.MongoClient(process.env.MONGODB_URI)
+client = pymongo.MongoClient(os.environ.get("MONGODB_URI"))
 db = client["jse"]
 col = db["companies"]
 
