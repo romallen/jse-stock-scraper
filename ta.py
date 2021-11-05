@@ -25,7 +25,7 @@ def create_df(ticker):
     return df
 
 
-df = create_df("FESCO")
+df = create_df("138SL")
 # df["rsi"] = df.ta.rsi()
 df["rsi_10"] = ta.rsi(close=df.close, length=10)
 df["sma_10"] = df.ta.sma(10)
@@ -42,7 +42,7 @@ df["ema_200"] = ta.ema(close=df.close, length=200)
 #
 # plt.plot(df.date, df.rsi)
 # plt.show()
-print(df.close())
+print(df)
 # help(ta.stoch)
 
 # fig0 = go.Figure(
