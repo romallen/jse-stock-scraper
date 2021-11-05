@@ -6,9 +6,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import pymongo
-import matplotlib.pyplot as plt
-import numpy as np
-import mplfinance as mpf
 import os
 from dotenv import load_dotenv
 
