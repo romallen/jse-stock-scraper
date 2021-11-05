@@ -17,7 +17,9 @@ app.title = "JSE CHART VIEWER"
 
 uri = os.environ.get("DB_URL") or os.environ.get("MONGODB_URI")
 load_dotenv()
+
 client = pymongo.MongoClient(uri)
+
 db = client["jse"]
 col = db["companies"]
 
@@ -31,7 +33,6 @@ for tick in get_tickers:
 
 
 # df = create_df("FESCO")
-
 
 app.layout = html.Div(
     [
