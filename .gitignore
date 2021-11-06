@@ -112,6 +112,7 @@ env.bak/
 venv.bak/
 *.pyc
 .DS_Store
+./vscode
 # Spyder project settings
 .spyderproject
 .spyproject

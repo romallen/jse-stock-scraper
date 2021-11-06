@@ -2,6 +2,7 @@ import dash
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
+from plotly.subplots import make_subplots
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -74,6 +75,28 @@ app.layout = html.Div(
                 ),
             ]
         ),
+        html.Div(
+            # [
+            #     html.Label("Select technical indicators:"),
+            #     dcc.Dropdown(
+            #         id="tech_ind",
+            #         options=["add_BBANDS", "add_RSI", "add_MACD"],
+            #         multi=True,
+            #         value=["add_BBANDS"],
+            #     ),
+            # ],
+            # html.Div(
+            #     [
+            #         html.Label("Specify parameters of technical indicators:"),
+            #         html.P(
+            #             "Use , to separate arguments and ; to separate indicators. () and spaces are ignored"
+            #         ),  # noqa: E501
+            #         dcc.Input(id="arglist", style={"height": "32", "width": "1020"}),
+            #     ],
+            #     id="arg-controls",
+            #     style={"display": "none"},
+            # ),
+        ),
         dcc.Graph(id="stock-chart"),
     ],
     className="container",
@@ -84,6 +107,7 @@ app.layout = html.Div(
     Output("stock-chart", "figure"),
     Input("drop-selection", "value"),
     Input("chart-type", "value"),
+    # Input("tech_ind", "value"),
 )
 def update_ticker(ticker, chart_type):
     items = col.find({"data.ticker": ticker}, {"pv": 1, "_id": 0})
@@ -112,6 +136,11 @@ def update_ticker(ticker, chart_type):
         height=550,
         # width="80%",
         title=ticker,
+        titlefont=dict(
+            family="Arial, sans-serif",
+            size=30,
+            # color='lightgrey'
+        ),
         xaxis=dict(
             rangeselector=dict(
                 buttons=list(
@@ -129,18 +158,28 @@ def update_ticker(ticker, chart_type):
             type="date",
             range=initial_range,
         ),
+        yaxis=dict(title="Volume", autorange=True),
+        yaxis2=dict(
+            title="Volume",
+            overlaying="y",
+            side="right",
+            scaleanchor="y",
+            scaleratio=0.1,
+            type="log",
+        ),
     )
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     if chart_type == "line":
-        return go.Figure(
+        fig = go.Figure(
             data=[
-                go.Scatter(x=df.date, y=df.close, yaxis="y1", name="close"),
-                # go.Bar(x=df.date, y=df.volume, yaxis="y2", name="Volume"),
+                go.Scatter(x=df.date, y=df.close, yaxis="y", name="close"),
+                go.Bar(x=df.date, y=df.volume, yaxis="y2", name="Volume"),
             ],
             layout=layout,
         )
     elif chart_type == "candle":
-        return go.Figure(
+        fig = go.Figure(
             data=[
                 go.Candlestick(
                     x=df.date, open=df.open, high=df.high, low=df.low, close=df.close
@@ -149,7 +188,7 @@ def update_ticker(ticker, chart_type):
             layout=layout,
         )
     elif chart_type == "ohlc":
-        return go.Figure(
+        fig = go.Figure(
             data=[
                 go.Ohlc(
                     x=df.date, open=df.open, high=df.high, low=df.low, close=df.close
@@ -157,6 +196,8 @@ def update_ticker(ticker, chart_type):
             ],
             layout=layout,
         )
+
+    return fig
 
 
 if __name__ == "__main__":
