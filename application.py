@@ -9,6 +9,8 @@ import pandas_ta as ta
 import pymongo
 import os
 from dotenv import load_dotenv
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -35,29 +37,42 @@ for tick in get_tickers:
 # df = create_df("FESCO")
 
 app.layout = html.Div(
-    [
+    children=[
         html.Div(
             [
-                html.H1(children="JAMAICA STOCK EXCHANGE CHARTS"),
+                html.H1(
+                    "JAMAICA STOCK EXCHANGE CHARTS",
+                ),
             ],
-            className="banner",
+            className="banners",
         ),
-        html.Div("A web application to view data from the Jamaica Stock Exchange."),
-        html.Label("Select a company"),
-        dcc.Dropdown(
-            id="drop-selection",
-            options=company_list,
-            value="138SL",
+        html.Div(
+            "A web application to view data from the Jamaica Stock Exchange.",
+            className="banners",
         ),
-        html.Label("Select type of graph"),
-        dcc.RadioItems(
-            id="chart-type",
-            options=[
-                {"label": "Line", "value": "line"},
-                {"label": "Candle Stick", "value": "candle"},
-                {"label": "OHLC", "value": "ohlc"},
-            ],
-            value="line",
+        html.Div(
+            children=[
+                html.Label("Select a company:"),
+                dcc.Dropdown(
+                    id="drop-selection",
+                    options=company_list,
+                    value="138SL",
+                ),
+            ]
+        ),
+        html.Div(
+            children=[
+                html.Label("Select a chart type:"),
+                dcc.RadioItems(
+                    id="chart-type",
+                    options=[
+                        {"label": "Line", "value": "line"},
+                        {"label": "Candle Stick", "value": "candle"},
+                        {"label": "OHLC", "value": "ohlc"},
+                    ],
+                    value="line",
+                ),
+            ]
         ),
         dcc.Graph(id="stock-chart"),
     ],
@@ -77,7 +92,7 @@ def update_ticker(ticker, chart_type):
         columns=("unix_date", "open", "high", "low", "close", "volume"),
     )
     df["date"] = pd.to_datetime(df["unix_date"], origin="unix", unit="ms")
-    # df.set_index("unix_date", inplace=True)
+    df.set_index("unix_date", inplace=True)
     # print(df.tail(1).date)
 
     df["rsi_10"] = ta.rsi(close=df.close, length=10)
@@ -88,11 +103,15 @@ def update_ticker(ticker, chart_type):
     df["ema_10"] = ta.ema(close=df.close, length=10)
     df["ema_50"] = ta.ema(close=df.close, length=50)
     df["ema_200"] = ta.ema(close=df.close, length=200)
-
-    print(df)
+    initial_range = [
+        (datetime.today() - relativedelta(months=+3)).strftime("%Y-%m-%d"),
+        datetime.today().strftime("%Y-%m-%d"),
+    ]
+    # print(df)
     layout = dict(
+        height=550,
+        # width="80%",
         title=ticker,
-        autosize=True,
         xaxis=dict(
             rangeselector=dict(
                 buttons=list(
@@ -108,17 +127,15 @@ def update_ticker(ticker, chart_type):
             ),
             rangeslider=dict(visible=True),
             type="date",
+            range=initial_range,
         ),
-        yaxis=dict(type="linear"),
     )
 
     if chart_type == "line":
         return go.Figure(
             data=[
-                go.Scatter(
-                    x=df.date,
-                    y=df.close,
-                )
+                go.Scatter(x=df.date, y=df.close, yaxis="y1", name="close"),
+                # go.Bar(x=df.date, y=df.volume, yaxis="y2", name="Volume"),
             ],
             layout=layout,
         )
