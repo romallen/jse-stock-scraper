@@ -25,16 +25,21 @@ client = pymongo.MongoClient(uri)
 
 db = client["jse"]
 col = db["companies"]
-
 company_list = []
-get_tickers = col.find({}, {"data.ticker": 1, "_id": 0})
-
-for tick in get_tickers:
-    company_list.append(
-        {"label": tick["data"]["ticker"], "value": tick["data"]["ticker"]}
+get_companies = col.find({}, {"_id": 0})
+get_pv = col.find({}, {"pv": 1, "_id": 0})
+ticker_list = []
+# get_tickers
+company_dict = {}
+# col.find({"data.ticker": ticker}, {"pv": 1, "_id": 0})
+for company in get_companies:
+    ticker_list.append(
+        {"label": company["data"]["ticker"], "value": company["data"]["ticker"]}
     )
+    company_dict[company["data"]["ticker"]] = [company["data"], company["pv"]]
 
 
+# print(company_list)
 # df = create_df("FESCO")
 
 app.layout = html.Div(
@@ -56,7 +61,7 @@ app.layout = html.Div(
                 html.Label("Select a company:"),
                 dcc.Dropdown(
                     id="drop-selection",
-                    options=company_list,
+                    options=ticker_list,
                     value="138SL",
                 ),
             ]
@@ -76,16 +81,16 @@ app.layout = html.Div(
             ]
         ),
         html.Div(
-            # [
-            #     html.Label("Select technical indicators:"),
-            #     dcc.Dropdown(
-            #         id="tech_ind",
-            #         options=["add_BBANDS", "add_RSI", "add_MACD"],
-            #         multi=True,
-            #         value=["add_BBANDS"],
-            #     ),
-            # ],
-            # html.Div(
+            [
+                html.Label("Select technical indicators:"),
+                dcc.Dropdown(
+                    id="tech_ind",
+                    options=[],
+                    multi=True,
+                    value="",
+                ),
+            ],
+            # html.Div({"add_BBANDS"}, {"add_RSI"}, {"add_MACD"}
             #     [
             #         html.Label("Specify parameters of technical indicators:"),
             #         html.P(
@@ -110,14 +115,14 @@ app.layout = html.Div(
     # Input("tech_ind", "value"),
 )
 def update_ticker(ticker, chart_type):
-    items = col.find({"data.ticker": ticker}, {"pv": 1, "_id": 0})
+    # items = list(company_list)
     df = pd.DataFrame(
-        data=list(items)[0]["pv"],
+        data=company_dict[ticker][1],
         columns=("unix_date", "open", "high", "low", "close", "volume"),
     )
     df["date"] = pd.to_datetime(df["unix_date"], origin="unix", unit="ms")
     df.set_index("unix_date", inplace=True)
-    # print(df.tail(1).date)
+    print(df.tail(1))
 
     df["rsi_10"] = ta.rsi(close=df.close, length=10)
     df["sma_10"] = df.ta.sma(10)
@@ -168,7 +173,6 @@ def update_ticker(ticker, chart_type):
             type="log",
         ),
     )
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     if chart_type == "line":
         fig = go.Figure(
