@@ -163,7 +163,7 @@ def update_ticker(ticker, chart_type):
             type="date",
             range=initial_range,
         ),
-        yaxis=dict(title="Volume", autorange=True),
+        yaxis=dict(title="Price", autorange=True),
         yaxis2=dict(
             title="Volume",
             overlaying="y",
@@ -204,5 +204,5 @@ def update_ticker(ticker, chart_type):
     return fig
 
 
-if __name__ == "__main__":
-    app.run_server(debug=True)
+#if __name__ == "__main__":
+    #app.run_server(debug=True)
