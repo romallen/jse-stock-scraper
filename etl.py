@@ -6,33 +6,36 @@ from dotenv import load_dotenv
 import os
 from requests.sessions import Request
 import pymongo
+import boto3
 
 
 load_dotenv()
+s3 = boto3.resource('s3')
 
 session = requests.Session()
 cookies = {
-    "XSRF-TOKEN": "eyJpdiI6IjE0Ui90dUY4djlqVHBnVWpERldOMWc9PSIsInZhbHVlIjoiOFAvT1IzQzJGbnJSdFNJdW1MalZScnUvUXJuNXdYTEdzbXM3d2VFdzlKa2VCY0loRGRoTDRNYm9oUWN4RUNYV1BYczR0bHdaQmhvbEhMNjFQZ25ncEcrVitkSnpzZUl3YXFYSHRIYkdBS2VqZEhRMm5Hc096Z052T1hIYlRqQ2kiLCJtYWMiOiI2ZmQ3NTg2MDM5NjhjNmJiZWQyMjgwZDVjNzYwOWQxNDUyYTA0NGY4ZWQ2YTI1Mzc4NWUyYzJjZGMxNjUwNTI1IiwidGFnIjoiIn0%3D",
-    "mymoneyja_session": "eyJpdiI6IktVOGNmbWZYV3pzRlZIalZrNWNEalE9PSIsInZhbHVlIjoiNklWb29hZDFEcVlQYTZ1eTFpUkpTL0crQnhCWjRCU3A5cVdOTWNBV3ZDc0VkZ0k3M0ZTUkxUTURUTEpkTjJWRERTTlVUOCtqZzBRYWlEeWRVN0ROVzF6cVRnQnVOeWV2Q0NjdVV5SlhIc0M4Z09FbXR0aUtES09UTEgwNmxZME4iLCJtYWMiOiI4ZDE4M2FkMDYyMjA4ZmNmOTRiNjQxMDFkNzJhOTVlNzZkYzUxY2E3NjY3NDJmNzEwODNjMTA5NDRlY2QyMmRlIiwidGFnIjoiIn0%3D",
-    "remember_web_3dc7a913ef5fd4b890ecabe3487085573e16cf82": "eyJpdiI6InJlenR4bVpiSE15RXJWUURrdW1oYkE9PSIsInZhbHVlIjoiTktCQ3EzWUFVYnd1bnc4YjdybzIzYlIxUWFiNFNMRENUSy9ZQUhQeUhobXZvcHBJT1pZSDVNSUQxSTVGcklhdytrbTd3anRDeDJhR0dTSjliL1BidzdPeXpKU1JlNFI2TEdELzlpUmZyWUZyQjVFVkxRbktWUG5vNTFxQUdIalpadHpvKy9ubHR2d1o2RUJ3UnlrSTNjamZxalNRbXJvSjNiZkswaG50dk1GZkFpRFlrTTNibit6ejB6L2o0ZldDSWZFYXpPNjBFQVMvNCtVZWpabkpxWUpFVGswN2U3NHFEekZRT1BjaFVuWT0iLCJtYWMiOiIwOTliNGZjNDZmMWE2MWFmYTA0MjJjMjczNGEyZDliZjFhN2FmOTVhMjU1NTE3MmY1NGM5YzMyZjE3MzM4ODgwIiwidGFnIjoiIn0%3D",
-}
+   'XSRF-TOKEN': 'eyJpdiI6Ik1NWFhIS1dHcGtHdzFreDRXVmxhVXc9PSIsInZhbHVlIjoicmxoTGFEMnZvTjA2STQrRy9sYm1sS1ErU0ptMkxMQThKM2E0YXV4Y0VITkRYczlycHM3NHFSOHl4czFmYjNRVzFCTjNxSjRqYzlGVXUraW1QSjdNdWxubU96UzFvKzVHeFdtRmJyZmpyUG40MjUzRWlIQmZxNG0vZ0I0bUI4K1UiLCJtYWMiOiIyMzNmZWZiZTE4MGM4NjM1NGU1ZWU1MTZlYmU0ZmIzMzhhZmYyMDliMTU2NDJlNzA0NjA1MmMyY2U0ZTQyNzYzIiwidGFnIjoiIn0%3D',
+    'mymoneyja_session': 'eyJpdiI6Ijg3UWdTWDAyMmRPVlBUL0g0K24zcHc9PSIsInZhbHVlIjoiVDl5bEVqcVN5TW1qdFEyY3p5SFVLaEIzR09KRGcydkR0R0FTTSswcmpsak94SnFnbEJaM0I0d3NsMXVIWDJ1NXFIa3gxSm4rbWNmd1h2b1R5UmdXdDJmVTZXTEdzNEhQZmp0UnQ5UjllODJkcW9hdy9iQWdyM1NlVFo3U0Z1djMiLCJtYWMiOiJiNTYxMDZkYmNlZTNjZWM4MjdmOTY2NThlMGE5YzdkNjM5MDEzYjBlNjhmOTIwMTAzZDMyMjU4NGI1NjhjMGQyIiwidGFnIjoiIn0%3D',
+    'crisp-client%2Fsession%2F595850e5-08f3-4ce7-82e8-129ab88f150c': 'session_0b59d118-8d04-4382-af1f-8f2d997f7e2e',
+    'remember_web_3dc7a913ef5fd4b890ecabe3487085573e16cf82': 'eyJpdiI6IjJoZmpYWjFYOENjQjQ1Lyt2TVpNSEE9PSIsInZhbHVlIjoiRkRCSkJwcXpvZG12MTNiWmhZOTU0cmdqQU9rUGgrQUw5V3dkU01HTENlK3lYdmJHYkVibldxWDJENmNlK2w1QzJHSStTdzdHVzhYYXE2UFUwdnEwRTZGVzQwUUxrKzErMHoyRTdreC9ra3NDL29lNkVSaWRVanZIVFNBTmZwamJOU2RmRGJtbG1FYWdoVnJ6M0RKV3pnR2s1SkhJUW9mQUtJQmdFRSsxZWdISWNHNnRnNFlLcVkwbnJwTXNYY2xCZ1h3ak9MeDV4MGZPUHVJUmJwNGlDYng5YmNOekxlUFcwTElLdEFKWjJkdz0iLCJtYWMiOiJiYjRjYjdkNWI2MzQ0NTY0Y2Q1Y2FkZDAyYTc3NGVjNDMxZWZjNzZjZjVkZGQwMzllODBkYjUzODE1MmRhOTZjIiwidGFnIjoiIn0%3D'
+    }
 
 
 session.headers = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:95.0) Gecko/20100101 Firefox/95.0",
-    "Accept": "text/html, application/xhtml+xml",
-    "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, deflate, br",
-    "X-Requested-With": "XMLHttpRequest",
-    "X-Inertia": "true",
-    "X-Inertia-Version": "eaab6f8db0b109568ae5e7468dbd534a",
-    "X-XSRF-TOKEN": "eyJpdiI6IjlqSkhZUXVscnJKdnpZMllFRUNwNHc9PSIsInZhbHVlIjoiN2EwTjZ3WjZ0VS9UWEk0RXlyTWcreENGaHFrY3FKQ250T3k5NGVibW1mRitOMkI1elVXZVNQSlRxcVAwc0xielhzOUZrcUtzcHlqcU1vSDdXSnJXdGpZMmUzN0xsN09XMExBcFl5RC9uTGNqT04xVzExQzB3ZEJLR1ZmaFNyNUUiLCJtYWMiOiI1YmMwMzNiNzZjYTI4OWIwZmU3Yjg5M2I1MWQyZDgwZDFlMTg5ZTQwZDg0ODVjNWQ2NzgyZjFkNDM5YzBmODgzIiwidGFnIjoiIn0=",
-    "Referer": "https://mymoneyja.com/login",
-    "Connection": "keep-alive",
-    "Sec-Fetch-Dest": "empty",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Site": "same-origin",
-    "TE": "trailers",
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:95.0) Gecko/20100101 Firefox/95.0',
+    'Accept': 'text/html, application/xhtml+xml',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-Inertia': 'true',
+    'X-Inertia-Version': 'eaab6f8db0b109568ae5e7468dbd534a',
+    'X-XSRF-TOKEN': 'eyJpdiI6IitnM3BydE1nMk9ZeUh5U2g2U29RaFE9PSIsInZhbHVlIjoiQVBoUWRnem9HU1g3S1JMK3ZSNWZ6V0greEN2TVlFRmF1YVJWZW9NcFVWd1RTY3hKVzBKUVVRSnU1ZlZnT0Y5bFpRQy9IU1BGci91eG1ZM0dOcjd5Qk1oWG0rMzdsckFQR29oeXpHSlo1SjJqcE9hSjJzOUtmZ0pkRzRFb0NHSkIiLCJtYWMiOiI2MTI2MzNiNGMzNjNlODUwMjdiYWM1NGY0ZWI1ZDMyMDliNjg2NTEyNTEyNDMxYTViN2IyMTc1M2UzOWE5ZTZhIiwidGFnIjoiIn0=',
+    'Referer': 'https://mymoneyja.com/login',
+    'Connection': 'keep-alive',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-origin',
+    'TE': 'trailers',
 }
 email = os.environ.get("EMAIL")
 password = os.environ.get("PASSWORD")
@@ -95,35 +98,40 @@ def split_dict_equally(input_dict, chunks=4):
 num_comp = len(companies)
 dictionaries = split_dict_equally(companies, num_comp)
 documents = []
+
 # populates dictionary with trade data
 def get_data(dictionary):
-    key = list(dictionary.keys())
-    key = key[0]
-    print(key)
+    keystr = list(dictionary.keys())
+    keystr = keystr[0]
+    print(keystr)
     response2 = session.get(
-        "https://mymoneyja.com/stock/{0}".format(key),
+        "https://mymoneyja.com/stock/{0}".format(keystr),
         cookies=cookies,
         headers=session.headers,
     )
     soup = BeautifulSoup(response2.content, "html.parser")
     stock_data = json.loads(soup.text)
     key = {}
-    #key["data"] = stock_data["props"]["company"]
-    # dictionary[key] = stock_data["props"]["company"]
-    # creates a price/volume key to store combined  ohlc and volume data
-    # pv = []
-    # for i in range(len(stock_data["props"]["company"]["data"]["ohlc"])):
-       
-        # price[i].append(volume[i]["y"])
-        # pv.append(price[i])
-    # dictionary[key]["pv"] = pv
-    # key["pv"] = pv
+   
     key["name"] = stock_data["props"]["company"]["name"]
     key["ticker"] = stock_data["props"]["company"]["ticker"]
-    key["close_prices"] = stock_data["props"]["company"]["data"]["close_prices"]
+    key["blurb"] = stock_data["props"]["company"]["blurb"]
+    #key["close_prices"] = stock_data["props"]["company"]["data"]["close_prices"]
     key["ohlc"] = stock_data["props"]["company"]["data"]["ohlc"]
     key["volume"] = stock_data["props"]["company"]["data"]["volume"]
     documents.append(key)
+    
+    stockChartData = []
+    stockChartData.append([key["name"], key["ticker"], key["blurb"]])
+    for i in range(len(stock_data["props"]["company"]["data"]["ohlc"])):
+        price = key["ohlc"][i]
+        vol = key["volume"][i]["volume"]
+        price.append(vol)
+        stockChartData.append(price)
+    
+    s3object = s3.Object('romallen.com', f'json/{keystr}-data.json')
+    s3object.put( Body=(bytes(json.dumps(stockChartData).encode('UTF-8'))), ContentType='application/json' )
+
 
 
 for dictionary in dictionaries:
@@ -135,10 +143,11 @@ client = pymongo.MongoClient(os.environ.get("DB_URL"))
 db = client["jse"]
 coll = db["companies"]
 
-x = coll.delete_many({})
-print(x.deleted_count, " documents deleted.")
+# x = coll.delete_many({})
+# print(x.deleted_count, " documents deleted.")
 y = coll.insert_many(documents)
 print(y)
+
 
 
 # x = coll.insert_one(documents[0])
