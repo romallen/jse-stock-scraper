@@ -125,12 +125,12 @@ input:checked + .slider:before {
         <option value="pc">Price Channel</option>
         <option value="priceenvelopes">Price Envelopes</option>
         <option value="psar">PSAR (Parabolic SAR)</option>
-        <option value="sma" selected="selected">SMA (Simple Moving Average)</option>
+        <option value="sma">SMA (Simple Moving Average)</option>
         <option value="supertrend">Super Trend</option>
         <option value="tema">TEMA (Triple Exponential Moving Average)</option>
         <option value="vbp">VbP (Volume by Price)</option>
-        <option value="vwap">WMA (Weighted Moving Average)</option>
-        <option value="wma">VWAP (Volume Weighted Average Price)</option>
+        <option value="wma">WMA (Weighted Moving Average)</option>
+        <option value="vwap">VWAP (Volume Weighted Average Price)</option>
         <option value="zigzag">Zig Zag</option>
       </select>
     </div>
@@ -166,7 +166,7 @@ input:checked + .slider:before {
         <option value="obv">OBV (On-Balance Volume)</option>
         <option value="ppo">Percentage Price oscillator</option>
         <option value="roc">RoC (Rate of Change)</option>
-        <option value="rsi" selected="selected">RSI (Relative Strength Index)</option>
+        <option value="rsi">RSI (Relative Strength Index)</option>
         <option value="slowstochastic">Slow Stochastic</option>
         <option value="stochastic">Stochastic</option>
         <option value="trix">TRIX</option>
@@ -298,10 +298,15 @@ companies.forEach((company)=> {
 })
 
 let selectedComp = "138SL"
+let selOver	 = "abands"
+let selOsci	 = "apo"
+let isOverOn = true
+let isOsciOn = true
 document.getElementById('compSel').addEventListener('change', function (e) {
     selectedComp = e.target.value
-    document.getElementById("toggleOverlays").checked = true;
-    document.getElementById("toggleOscillators").checked = true;
+    	//document.getElementById("toggleOverlays").checked = true;
+    //document.getElementById("toggleOscillators").checked = true;
+    
     jseChart(selectedComp)
 });
 
@@ -372,12 +377,12 @@ for (let i = 0; i < dataLength; i += 1) {
             data: volume,
             yAxis: 1
         }, {
-            type: 'sma',
+            type: selOver,
             id: 'overlay',
             linkedTo: ticker,
             yAxis: 0
         }, {
-            type: 'rsi',
+            type: selOsci,
             id: 'oscillator',
             linkedTo: ticker,
             yAxis: 2
@@ -385,7 +390,7 @@ for (let i = 0; i < dataLength; i += 1) {
     }, function (chart) {
         document.getElementById('overlays').addEventListener('change', function (e) {
             var series = chart.get('overlay');
-
+selOver = e.target.value
             if (series) {
                 series.remove(false);
                 chart.addSeries({
@@ -398,7 +403,7 @@ for (let i = 0; i < dataLength; i += 1) {
 
         document.getElementById('oscillators').addEventListener('change', function (e) {
             var series = chart.get('oscillator');
-
+selOsci = e.target.value
             if (series) {
                 series.remove(false);
                 chart.addSeries({
@@ -410,22 +415,40 @@ for (let i = 0; i < dataLength; i += 1) {
 						
             }
         });
+if (!isOsciOn) {
+var series = chart.get('oscillator');
+series.hide()
+}
+if (!isOverOn) {
+var series = chart.get('overlay');
+series.hide()
+}
+
 
 	document.getElementById('toggleOscillators').addEventListener('click', e => {
     var series = chart.get('oscillator');
-    if (series.visible) {
+    
+if (!document.getElementById('toggleOscillators').checked) {
         series.hide();      
+document.getElementById('oscillators').disabled= true
+isOsciOn = false
     } else {
         series.show();    
+document.getElementById('oscillators').disabled= false
+isOsciOn = true
     }
 });
 
 	document.getElementById('toggleOverlays').addEventListener('click', e => {
     var series = chart.get('overlay');
-    if (series.visible) {
+    if (!document.getElementById("toggleOverlays").checked) {
         series.hide();  
+document.getElementById('overlays').disabled= true
+isOverOn = false
     } else {
         series.show();  
+document.getElementById('overlays').disabled= false
+isOverOn = true
     }
 });
 
