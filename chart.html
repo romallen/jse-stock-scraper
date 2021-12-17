@@ -1,0 +1,464 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>JSE CHARTS</title>
+
+		<style type="text/css">
+.selectors-container {
+    background: #f2f2f2;
+    margin-bottom: 1rem;
+    font-size: 0;
+}
+
+.selectors-container .col {
+    font-size: 1.2rem;
+    width: calc(50% - 1em);
+    padding: 0.5em;
+    display: inline-block;
+}
+
+.selectors-container select {
+    width: 100%;
+    font-size: 16px; /* prevent page zoom in iOS */
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 30px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+@media (max-width: 768px) {
+    .selectors-container .col {
+        display: block;
+        width: calc(100% - 1em);
+    }
+}
+
+		</style>
+	</head>
+	<body>
+        <script src="https://code.highcharts.com/stock/highstock.js"></script>
+        <script src="https://code.highcharts.com/stock/modules/data.js"></script>
+        <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+        <script src="https://code.highcharts.com/stock/indicators/indicators-all.js"></script>
+    
+
+<div class="main-wrapper">
+<div id="selCompany">
+      <label for="compSel">Companies:</label>
+      <select class="left-select" id="compSel">    
+</select>
+</div>
+
+  <div class="selectors-container">
+    <div class="col">
+      <label for="overlays">Overlays:
+<label class="switch">
+  <input type="checkbox" id="toggleOverlays" checked>
+  <span class="slider round"></span>
+</label>
+</label>
+      <select class="left-select" id="overlays">
+        <option value="abands">Acceleration Bands</option>
+        <option value="bb">Bollinger Bands</option>
+        <option value="dema">DEMA (Double Exponential Moving Average)</option>
+        <option value="ema">EMA (Exponential Moving Average)</option>
+        <option value="ikh">Ichimoku Kinko Hyo</option>
+        <option value="keltnerchannels">Keltner Channels</option>
+        <option value="linearRegression">Linear Regression</option>
+        <option value="pivotpoints">Pivot Points</option>
+        <option value="pc">Price Channel</option>
+        <option value="priceenvelopes">Price Envelopes</option>
+        <option value="psar">PSAR (Parabolic SAR)</option>
+        <option value="sma">SMA (Simple Moving Average)</option>
+        <option value="supertrend">Super Trend</option>
+        <option value="tema">TEMA (Triple Exponential Moving Average)</option>
+        <option value="vbp">VbP (Volume by Price)</option>
+        <option value="wma">WMA (Weighted Moving Average)</option>
+        <option value="vwap">VWAP (Volume Weighted Average Price)</option>
+        <option value="zigzag">Zig Zag</option>
+      </select>
+    </div>
+    <div class="col">
+      <label for="oscillators">Oscillators:
+<label class="switch">
+  <input type="checkbox" id="toggleOscillators" checked>
+  <span class="slider round"></span>
+</label>
+</label>
+      <select class="right-select" id="oscillators">
+        <option value="apo">Absolute price indicator</option>
+        <option value="ad">A/D (Accumulation/Distribution)</option>
+        <option value="aroon">Aroon</option>
+        <option value="aroonoscillator">Aroon oscillator</option>
+        <option value="atr">ATR (Average True Range)</option>
+        <option value="ao">Awesome oscillator</option>
+        <option value="cci">CCI (Commodity Channel Index)</option>
+        <option value="chaikin">Chaikin</option>
+        <option value="cmf">CMF (Chaikin Money Flow)</option>
+        <option value="disparityindex">Disparity Index</option>
+        <option value="cmo">CMO (Chande Momentum Oscillator)</option>
+        <option value="dmi">DMI (Directional Movement Index)</option>
+        <option value="dpo">Detrended price</option>
+        <option value="linearRegressionAngle">Linear Regression Angle</option>
+        <option value="linearRegressionIntercept">Linear Regression Intercept</option>
+        <option value="linearRegressionSlope">Linear Regression Slope</option>
+        <option value="klinger">Klinger Oscillator</option>
+        <option value="macd">MACD (Moving Average Convergence Divergence)</option>
+        <option value="mfi">MFI (Money Flow Index)</option>
+        <option value="momentum">Momentum</option>
+        <option value="natr">NATR (Normalized Average True Range)</option>
+        <option value="obv">OBV (On-Balance Volume)</option>
+        <option value="ppo">Percentage Price oscillator</option>
+        <option value="roc">RoC (Rate of Change)</option>
+        <option value="rsi">RSI (Relative Strength Index)</option>
+        <option value="slowstochastic">Slow Stochastic</option>
+        <option value="stochastic">Stochastic</option>
+        <option value="trix">TRIX</option>
+        <option value="williamsr">Williams %R</option>
+      </select>
+    </div>
+  </div>
+  <div id="container"></div>
+  <h2>ABOUT THE COMPANY</h2>
+  <p id="blurb"></p>
+</div>
+
+
+
+<script type="text/javascript">
+
+const companies = [
+            [ '138SL', '138 STUDENT LIVING JAMAICA LIMITED' ],
+            [ '1834', '1834 INVESTMENTS LIMITED' ],
+            [ 'AFS', 'ACCESS FINANCIAL SERVICES LIMITED' ],
+            [ 'AMG', 'AMG PACKAGING  & PAPER COMPANY LIMITED' ],
+            [ 'BIL', 'BARITA INVESTMENTS LIMITED' ],
+            [ 'BPOW', 'BLUE POWER GROUP LIMITED' ],
+            [ 'BRG', 'BERGER PAINTS JAMAICA LTD.' ],
+            [ 'CABROKERS', 'CARIBBBEAN ASSURANCE BROKERS LIMITED' ],
+            [ 'CAC', 'CAC 2000 LIMITED' ],
+            [ 'CAR', 'CARRERAS LIMITED' ],
+            [ 'CBNY', 'CIBONEY GROUP LIMITED' ],
+            [ 'CCC', 'CARIBBEAN CEMENT COMPANY LTD' ],
+            [ 'CFF', 'CARIBBEAN FLAVOURS & FRAGRANCES LIMITED' ],
+            [ 'CHL', 'CARGO HANDLERS LIMITED' ],
+            [ 'CPFV', 'EPPLEY CARIBBEAN PROPERTY FUND LIMITED SCC' ],
+            [ 'CPJ', 'CARIBBEAN PRODUCERS JAMAICA LIMITED' ],
+            [ 'DCOVE', 'DOLPHIN COVE LIMITED' ],
+            [ 'DTL', 'DERRIMON TRADING COMPANY LIMITED' ],
+            [ 'ECL', 'EXPRESS CATERING LIMITED' ],
+            [ 'EFRESH', 'EVERYTHING FRESH LIMITED' ],
+            [ 'ELITE', 'ELITE DIAGNOSTIC LIMITED' ],
+            [ 'EPLY', 'EPPLEY LIMITED' ],
+            [ 'FIRSTROCKJMD', 'FIRST ROCK CAPITAL HOLDINGS LIMITED' ],
+            [ 'FIRSTROCKUSD', 'FIRST ROCK CAPITAL HOLDINGS LIMITED  (USD)' ],
+            [ 'FOSRICH', 'FOSRICH COMPANY LIMITED' ],
+            [ 'FTNA', 'FONTANA LIMITED' ],
+            [ 'GENAC', 'GENERAL ACCIDENT INSURANCE COMPANY (JA) LIMITED' ],
+            [ 'GHL', 'GUARDIAN HOLDINGS LIMITED' ],
+            [ 'GK', 'GRACEKENNEDY LIMITED' ],
+            [ 'GWEST', 'GWEST CORPORATION LIMITED ORDINARY SHARES' ],
+            [ 'HONBUN', 'HONEY BUN (1982) LIMITED' ],
+            [ 'ICREATE', 'ICREATE LIMITED ORDINARY SHARES' ],
+            [ 'INDIES', 'INDIES PHARMA JAMAICA LIMITED ORDINARY SHARES' ],
+            [ 'ISP', 'ISP FINANCE SERVICES LIMITED' ],
+            [ 'JAMT', 'JAMAICAN TEAS LIMITED' ],
+            [ 'JBG', 'JAMAICA BROILERS GROUP' ],
+            [ 'JETCON', 'JETCON CORPORATION LIMITED' ],
+            [ 'JMMBGL', 'JMMB GROUP LIMITED' ],
+            [ 'JP', 'JAMAICA PRODUCERS GROUP LTD.' ],
+            [ 'JSE', 'JAMAICA STOCK EXCHANGE' ],
+            [ 'KEX', 'KNUTSFORD EXPRESS SERVICES LIMITED' ],
+            [ 'KEY', 'KEY INSURANCE COMPANY LIMITED' ],
+            [ 'KLE', 'K.L.E. GROUP LIMITED' ],
+            [ 'KPREIT', 'KINGSTON PROPERTIES LIMITED' ],
+            [ 'KREMI', 'CARIBBEAN CREAM LIMITED' ],
+            [ 'KW', 'KINGSTON WHARVES LIMITED' ],
+            [ 'LAB', 'THE LIMNERS AND BARDS LIMITED' ],
+            [ 'LASD', 'LASCO DISTRIBUTORS LIMITED' ],
+            [ 'LASF', 'LASCO FINANCIAL SERVICES LIMITED' ],
+            [ 'LASM', 'LASCO MANUFACTURING LIMITED' ],
+            [ 'LUMBER', 'LUMBER DEPOT LIMITED' ],
+            [ 'MAILPAC', 'MAILPAC GROUP LIMITED' ],
+            [ 'MDS', 'MEDICAL DISPOSABLES & SUPPLIES LIMITED' ],
+            [ 'MEEG', 'MAIN EVENT ENTERTAINMENT GROUP' ],
+            [ 'MIL', 'MAYBERRY INVESTMENTS LIMITED' ],
+            [ 'MJE', 'MAYBERRY JAMAICAN EQUITIES LIMITED' ],
+            [ 'MPCCEL', 'MPC CARIBBEAN CLEAN ENERGY LIMITED' ],
+            [ 'MPCCELUSD', 'MPC CARIBBEAN CLEAN ENERGY LIMITED USD' ],
+            [ 'MTL', 'MARGARITAVILLE (TURKS) LIMITED' ],
+            [ 'MTLUSD', 'MARGARITAVILLE (TURKS) LIMITED USD' ],
+            [ 'NCBFG', 'NCB FINANCIAL GROUP LIMITED ' ],
+            [ 'PAL', 'PALACE AMUSEMENT CO. LTD.' ],
+            [ 'PBS', 'PRODUCTIVE BUSINESS SOLUTION LTD USD ORDINARY SHARES' ],
+            [ 'PJAM', 'PANJAM INVESTMENT LIMITED' ],
+            [ 'PJX', 'PORTLAND JSX LIMITED' ],
+            [ 'PROVEN', 'PROVEN INVESTMENTS LIMITED JMD' ],
+            [ 'PROVENUSD', 'PROVEN INVESTMENTS LIMITED USD' ],
+            [ 'PTL', 'PARAMOUNT TRADING (JAMAICA) LIMITED' ],
+            [ 'PULS', 'PULSE INVESTMENTS LIMITED' ],
+            [ 'PURITY', 'CONSOLIDATED BAKERIES (JAMAICA) LIMITED' ],
+            [ 'QWI', 'QWI INVESTMENTS LIMITED' ],
+            [ 'RJR', 'RADIO JAMAICA LIMITED' ],
+            [ 'ROC', 'IRONROCK INSURANCE COMPANY LIMITED' ],
+            [ 'SALF', 'SALADA FOODS JAMAICA LTD.' ],
+            [ 'SCIJMD', 'SYGNUS CREDIT INVESTMENTS LIMITED JMD ORDINARY SHARES' ],
+            [ 'SCIJMD', 'SYGNUS CREDIT INVESTMENTS LIMITED USD ORDINARY SHARES' ],
+            [ 'SCIUSD', 'SYGNUS CREDIT INVESTMENTS LIMITED JMD ORDINARY SHARES' ],
+            [ 'SCIUSD', 'SYGNUS CREDIT INVESTMENTS LIMITED USD ORDINARY SHARES' ],
+            [ 'SELECTF', 'SAGICOR SELECT FUNDS LIMITED FINANCIAL' ],
+            [
+              'SELECTMD',
+              'SAGICOR SELECT FUNDS LIMITED MANUFACTURING & DISTRIBUTION'
+            ],
+            [ 'SEP', 'SEPROD LIMITED' ],
+            [ 'SGJ', 'SCOTIA GROUP JAMAICA LIMITED' ],
+            [ 'SIL', 'STERLING INVESTMENTS LIMITED' ],
+            [ 'SILUSD', 'STERLING INVESTMENTS LIMITED USD' ],
+            [ 'SJ', 'SAGICOR GROUP JAMAICA LIMITED' ],
+            [ 'SML', 'STANLEY MOTTA LIMITED ORDINARY SHARES' ],
+            [ 'SOS', 'STATIONERY AND OFFICE SUPPLIES LIMITED' ],
+            [ 'SRFJMD', 'SYGNUS REAL ESTATE FINANCE LIMITED' ],
+            [ 'SRFUSD', 'SYGNUS REAL ESTATE FINANCE LIMITED' ],
+            [ 'SSLVC', 'SSL VENTURE CAPITAL JAMAICA LIMITED' ],
+            [ 'SVL', 'SUPREME VENTURES LIMITED' ],
+            [ 'TJH', 'TRANSJAMAICAN HIGHWAY LIMITED JMD' ],
+            [ 'TJHUSD', 'TRANSJAMAICAN HIGHWAY LIMITED USD' ],
+            [ 'TROPICAL', 'TROPICAL BATTERY' ],
+            [ 'TTECH', 'TTECH LIMITED' ],
+            [ 'VMIL', 'VICTORIA MUTUAL INVESTMENTS LTD ORDINARY SHARES' ],
+            [ 'WIG', 'WIGTON WINDFARM LIMITED ORDINARY SHARES' ],
+            [ 'WISYNCO', 'WISYNCO GROUP LTD ORDINARY SHARES' ],
+            [ 'XFUND', 'SAGICOR REAL ESTATE X FUND LTD.' ]
+            ];  
+
+var selectList = document.getElementById('compSel')
+
+companies.forEach((company)=> {
+    var option = document.createElement("option");
+    option.value = company[0]
+    option.text = company[1]
+    selectList.appendChild(option);
+})
+
+let selectedComp = "138SL"
+let selOver	 = "abands"
+let selOsci	 = "apo"
+let isOverOn = true
+let isOsciOn = true
+document.getElementById('compSel').addEventListener('change', function (e) {
+    selectedComp = e.target.value
+    	//document.getElementById("toggleOverlays").checked = true;
+    //document.getElementById("toggleOscillators").checked = true;
+    
+    jseChart(selectedComp)
+});
+
+let jseChart = (selectedComp) => {Highcharts.getJSON(`https://s3.ap-northeast-1.amazonaws.com/romallen.com/json/${selectedComp}-data.json`, function (data) {
+    // split the data set into ohlc and volume
+    let companiesInfo = data.splice(0,1)  
+    let ticker = companiesInfo[0][1]    
+    let name = companiesInfo[0][0]
+
+    document.getElementById('blurb').innerHTML = companiesInfo[0][2]
+
+let ohlc = [];
+let volume = [];
+dataLength = data.length;
+
+for (let i = 0; i < dataLength; i += 1) {
+    ohlc.push([
+        data[i][0], // the date
+        data[i][1], // open
+        data[i][2], // high
+        data[i][3], // low
+        data[i][4] // close
+    ]);
+
+    volume.push([
+        data[i][0], // the date
+        data[i][5] // the volume
+    ]);
+}
+
+    // create the chart
+    Highcharts.stockChart('container', {
+        chart: {
+            height: 550
+        },
+        title: {
+            text: name
+        },
+        legend: {
+            enabled: true
+        },
+        rangeSelector: {
+            selected: 1
+        },
+        yAxis: [{
+            height: '60%'
+        }, {
+            top: '60%',
+            height: '20%'
+        }, {
+            top: '80%',
+            height: '20%'
+        }],
+        plotOptions: {
+            series: {
+                showInLegend: true
+            }
+        },
+        series: [{
+            type: 'candlestick',
+            id: ticker,
+            name: ticker,
+            data: data
+        }, {
+            type: 'column',
+            id: 'volume',
+            name: 'Volume',
+            data: volume,
+            yAxis: 1
+        }, {
+            type: selOver,
+            id: 'overlay',
+            linkedTo: ticker,
+            yAxis: 0
+        }, {
+            type: selOsci,
+            id: 'oscillator',
+            linkedTo: ticker,
+            yAxis: 2
+        }]
+    }, function (chart) {
+        document.getElementById('overlays').addEventListener('change', function (e) {
+            var series = chart.get('overlay');
+selOver = e.target.value
+            if (series) {
+                series.remove(false);
+                chart.addSeries({
+                    type: e.target.value,
+                    linkedTo: ticker,
+                    id: 'overlay'
+                });
+            }
+        });
+
+        document.getElementById('oscillators').addEventListener('change', function (e) {
+            var series = chart.get('oscillator');
+selOsci = e.target.value
+            if (series) {
+                series.remove(false);
+                chart.addSeries({
+                    type: e.target.value,
+                    linkedTo: ticker,
+                    id: 'oscillator',
+                    yAxis: 2
+                });
+						
+            }
+        });
+if (!isOsciOn) {
+var series = chart.get('oscillator');
+series.hide()
+}
+if (!isOverOn) {
+var series = chart.get('overlay');
+series.hide()
+}
+
+
+	document.getElementById('toggleOscillators').addEventListener('click', e => {
+    var series = chart.get('oscillator');
+    
+if (!document.getElementById('toggleOscillators').checked) {
+        series.hide();      
+document.getElementById('oscillators').disabled= true
+isOsciOn = false
+    } else {
+        series.show();    
+document.getElementById('oscillators').disabled= false
+isOsciOn = true
+    }
+});
+
+	document.getElementById('toggleOverlays').addEventListener('click', e => {
+    var series = chart.get('overlay');
+    if (!document.getElementById("toggleOverlays").checked) {
+        series.hide();  
+document.getElementById('overlays').disabled= true
+isOverOn = false
+    } else {
+        series.show();  
+document.getElementById('overlays').disabled= false
+isOverOn = true
+    }
+});
+
+    });
+
+
+});
+}
+		
+jseChart(selectedComp)
+</script>
+	</body>
+</html>
