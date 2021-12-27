@@ -8,17 +8,17 @@ from requests.sessions import Request
 import pymongo
 import boto3
 from selenium.webdriver.chrome.service import Service
-#from selenium import webdriver
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from seleniumwire import webdriver
 import time
+
+
 load_dotenv()
 s3 = boto3.resource('s3')
 
 session = requests.Session()
-# session.cookies ={'XSRF-TOKEN': '',
-#                   'mymoneyja_session': ''
-#                   }
+
 session.headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:95.0) Gecko/20100101 Firefox/95.0',
         'Accept': 'text/html, application/xhtml+xml',
@@ -47,69 +47,51 @@ email.send_keys(os.environ.get("EMAIL"))
 password.send_keys(os.environ.get("PASSWORD"))
 
 page_to_scrape.find_element(By.CSS_SELECTOR, "body > div > div > form > div:nth-child(4) > button").click()
-
+time.sleep(3)
+page_to_scrape.find_element(By.CSS_SELECTOR, "a.w-full:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3)").click()
+time.sleep(5)
 selCookies = page_to_scrape.get_cookies()
-
+#store the headers in the session
 for request in page_to_scrape.requests:
     if request.headers['x-xsrf-token']:
+        del session.headers['Referer'] 
+        del session.headers['X-XSRF-TOKEN'] 
+        del session.headers['User-Agent'] 
+        del session.headers['X-Inertia-Version'] 
         session.headers['Referer'] = request.headers['referer']
         session.headers['X-XSRF-TOKEN'] = request.headers['x-xsrf-token']
         session.headers['User-Agent'] = request.headers['user-agent']
         session.headers['X-Inertia-Version'] = request.headers['x-inertia-version']
         
         
-
+#store the cookies in the session
 for cookie in selCookies:
     session.cookies[cookie["name"]] = cookie["value"]
-print(session.cookies)
-    
-#print(session.headers)
 
 
-
-
-time.sleep(10)
+time.sleep(5)
 
 response = session.get(
     "https://mymoneyja.com/stock/138SL", 
 )
-print(response.content)
+
 # get scaped data for tickers
 stock_data = json.loads(response.content)
 
-companies = {}
-companies["138SL"] = True
+companies = ["138SL"]
+
 # saves the companies tickers in a dictionary
 for comp in stock_data["props"]["companies"]:
-    companies[comp["ticker"]] = True
+    companies.append(comp["ticker"])
 
 
-# splits companies dictionary. This is done because MongoDB as a size limit on each collection
-def split_dict_equally(input_dict, chunks=4):
-    "Splits dict by keys. Returns a list of dictionaries."
-    # prep with empty dicts
-    return_list = [dict() for idx in range(chunks)]
-    idx = 0
-    for k, v in input_dict.items():
-        return_list[idx][k] = v
-        if idx < chunks - 1:  # indexes start at 0
-            idx += 1
-        else:
-            idx = 0
-    return return_list
-
-
-num_comp = len(companies)
-dictionaries = split_dict_equally(companies, num_comp)
 documents = []
 
 # populates dictionary with trade data
-def get_data(dictionary):
-    keystr = list(dictionary.keys())
-    keystr = keystr[0]
-    print(keystr)
+def get_data(company):
+    print(company)
     response2 = session.get(
-        "https://mymoneyja.com/stock/{0}".format(keystr),
+        f"https://mymoneyja.com/stock/{company}",
        
     )
     soup = BeautifulSoup(response2.content, "html.parser")
@@ -132,22 +114,21 @@ def get_data(dictionary):
         price.append(vol)
         stockChartData.append(price)
     
-    s3object = s3.Object('romallen.com', f'json/{keystr}-data.json')
+    s3object = s3.Object('romallen.com', f'json/{company}-data.json')
     s3object.put( Body=(bytes(json.dumps(stockChartData).encode('UTF-8'))), ContentType='application/json' )
 
 
 
-#for dictionary in dictionaries:
-    #get_data(dictionary)
+for company in companies:
+    get_data(company)
 
 
-# uploads dictionaries as a collection to MongoDb
+# uploads documents to MongoDb
 client = pymongo.MongoClient(os.environ.get("DB_URL"))
 db = client["jse"]
 coll = db["companies"]
 
-# x = coll.delete_many({})
-# print(x.deleted_count, " documents deleted.")
+
 y = coll.insert_many(documents)
 print(y)
 
