@@ -288,10 +288,10 @@ const companies = [
             [ 'XFUND', 'SAGICOR REAL ESTATE X FUND LTD.' ]
             ];  
 
-var selectList = document.getElementById('compSel')
+let selectList = document.getElementById('compSel')
 
 companies.forEach((company)=> {
-    var option = document.createElement("option");
+    let option = document.createElement("option");
     option.value = company[0]
     option.text = company[1]
     selectList.appendChild(option);
@@ -389,7 +389,7 @@ for (let i = 0; i < dataLength; i += 1) {
         }]
     }, function (chart) {
         document.getElementById('overlays').addEventListener('change', function (e) {
-            var series = chart.get('overlay');
+            let series = chart.get('overlay');
 selOver = e.target.value
             if (series) {
                 series.remove(false);
@@ -402,7 +402,7 @@ selOver = e.target.value
         });
 
         document.getElementById('oscillators').addEventListener('change', function (e) {
-            var series = chart.get('oscillator');
+            let series = chart.get('oscillator');
 selOsci = e.target.value
             if (series) {
                 series.remove(false);
@@ -416,17 +416,17 @@ selOsci = e.target.value
             }
         });
 if (!isOsciOn) {
-var series = chart.get('oscillator');
+let series = chart.get('oscillator');
 series.hide()
 }
 if (!isOverOn) {
-var series = chart.get('overlay');
+let series = chart.get('overlay');
 series.hide()
 }
 
 
 	document.getElementById('toggleOscillators').addEventListener('click', e => {
-    var series = chart.get('oscillator');
+    let series = chart.get('oscillator');
     
 if (!document.getElementById('toggleOscillators').checked) {
         series.hide();      
@@ -440,7 +440,7 @@ isOsciOn = true
 });
 
 	document.getElementById('toggleOverlays').addEventListener('click', e => {
-    var series = chart.get('overlay');
+    let series = chart.get('overlay');
     if (!document.getElementById("toggleOverlays").checked) {
         series.hide();  
 document.getElementById('overlays').disabled= true
