@@ -1,4 +1,3 @@
-from pymongo.message import _first_batch
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -8,7 +7,6 @@ from requests.sessions import Request
 import pymongo
 import boto3
 from selenium.webdriver.chrome.service import Service
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from seleniumwire import webdriver
 import time
@@ -114,7 +112,7 @@ def get_data(company):
         price.append(vol)
         stockChartData.append(price)
     
-    s3object = s3.Object('romallen.com', f'json/{company}-data.json')
+    s3object = s3.Object(os.environ.get("S3_BUCKET"), f'json/{company}-data.json')
     s3object.put( Body=(bytes(json.dumps(stockChartData).encode('UTF-8'))), ContentType='application/json' )
 
 
