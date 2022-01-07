@@ -25,6 +25,6 @@ To store the data in MongoDB put the **DB URI** provide by MongoDB in the `.env`
 
 ## The Chart
 
-The use the chart html file with the data you scraped replace the url found on line 313 in the `chart.html` file with your own S3 url.
+To use the chart html file with the data you scraped replace the url found on line 313 in the `chart.html` file with your own S3 url.
 
-You should also add `/${selectedComp}-data.json` to the end of the url.
+You should also add `/${selectedComp}-data.json` to the end of your url.
