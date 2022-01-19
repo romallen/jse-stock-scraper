@@ -20,7 +20,7 @@ DB_URL=""
 
 A **mymoneyja**  account is required to successfully access the data on the site. Once your account is created add the email and password for your account in the `.env` file.
 
-To store the data in your own S3 bucket you must have the **AWS CLI** tool installed on your machine. Put the name of the S3 Bucket that you will use int the `.env` file.
+To store the data in your own S3 bucket you must have the **AWS CLI** tool installed on your machine. Add the name of the S3 Bucket that you will use to the `.env` file.
 
 To store the data in MongoDB put the **DB URI** provide by MongoDB in the `.env` DB_URL variable.
 
