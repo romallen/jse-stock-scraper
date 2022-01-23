@@ -172,5 +172,5 @@ coll = db["companies"]
 # x = coll.delete_many({})
 # print(x.deleted_count, " documents deleted.")
 #y = coll.insert_many(documents)
-print(y)
+#print(y)
 

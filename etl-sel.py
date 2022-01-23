@@ -102,7 +102,6 @@ def get_data(company):
     #key["close_prices"] = stock_data["props"]["company"]["data"]["close_prices"]
     key["ohlc"] = stock_data["props"]["company"]["data"]["ohlc"]
     key["volume"] = stock_data["props"]["company"]["data"]["volume"]
-    documents.append(key)
     
     stockChartData = []
     stockChartData.append([key["name"], key["ticker"], key["blurb"]])
@@ -111,7 +110,11 @@ def get_data(company):
         vol = key["volume"][i]["volume"]
         price.append(vol)
         stockChartData.append(price)
-    
+    key["ohlcv"]= stockChartData
+    documents.append(key)
+    del key["ohlc"]
+    del key["volume"]
+        
     s3object = s3.Object(os.environ.get("S3_BUCKET"), f'json/{company}-data.json')
     s3object.put( Body=(bytes(json.dumps(stockChartData).encode('UTF-8'))), ContentType='application/json' )
 
@@ -126,7 +129,9 @@ client = pymongo.MongoClient(os.environ.get("DB_URL"))
 db = client["jse"]
 coll = db["companies"]
 
-
+x= coll.delete_many({})
+print(x)
 y = coll.insert_many(documents)
+#y = coll.insert_many(companies)
 print(y)
 
