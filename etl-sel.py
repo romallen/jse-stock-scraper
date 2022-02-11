@@ -9,6 +9,8 @@ import boto3
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from seleniumwire import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.utils import ChromeType
 import time
 
 
@@ -36,8 +38,9 @@ session.headers = {
     }
 
 
-browser_driver = Service('/usr/local/bin/chromedriver')
-page_to_scrape = webdriver.Chrome(service=browser_driver)
+# browser_driver = Service('/usr/local/bin/chromedriver').
+# browser_driver = webdriver.Chrome(ChromeDriverManager().install())
+page_to_scrape = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
 page_to_scrape.get("https://mymoneyja.com/login")
 email = page_to_scrape.find_element(By.NAME, "email")
 password = page_to_scrape.find_element(By.NAME, "password")
