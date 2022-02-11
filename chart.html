@@ -311,7 +311,7 @@ document.getElementById('compSel').addEventListener('change', function (e) {
     jseChart(selectedComp)
 });
 
-let jseChart = (selectedComp) => {Highcharts.getJSON('json/BIL-data.json', function (data) {
+let jseChart = (selectedComp) => {Highcharts.getJSON(`https://s3.ap-northeast-1.amazonaws.com/romallen.com/json/LAB-data.json`, function (data) {
     // split the data set into ohlc and volume
     let companiesInfo = data.splice(0,1)  
     let ticker = companiesInfo[0][1]    

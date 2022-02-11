@@ -132,6 +132,5 @@ coll = db["companies"]
 x= coll.delete_many({})
 print(x)
 y = coll.insert_many(documents)
-#y = coll.insert_many(companies)
 print(y)
 
