@@ -134,6 +134,7 @@ coll = db["companies"]
 
 x= coll.delete_many({})
 print(x)
+coll.insert_one({"name": "meta", "last_updated": int(time.time())*1000})
 y = coll.insert_many(documents)
 print(y)
 
