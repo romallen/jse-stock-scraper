@@ -125,8 +125,9 @@ def get_data(company):
 
 # for company in companies:
 #     get_data(company)
-with ThreadPoolExecutor() as executor:
-    executor.map(get_data, companies)
+def scraper(event, context):
+    with ThreadPoolExecutor() as executor:
+        executor.map(get_data, companies)
         
 
 # uploads documents to MongoDb
