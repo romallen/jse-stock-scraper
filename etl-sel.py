@@ -12,7 +12,7 @@ from seleniumwire import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.utils import ChromeType
 import time
-
+from concurrent.futures import ThreadPoolExecutor
 
 load_dotenv()
 s3 = boto3.resource('s3')
@@ -118,14 +118,16 @@ def get_data(company):
     del key["ohlc"]
     del key["volume"]
         
-    s3object = s3.Object(os.environ.get("S3_BUCKET"), f'json/{company}-data.json')
+    s3object = s3.Object(os.environ.get("S3_BUCKET"), f'jsonv2/{company}.json')
     s3object.put( Body=(bytes(json.dumps(stockChartData).encode('UTF-8'))), ContentType='application/json' )
 
 
 
-for company in companies:
-    get_data(company)
-
+# for company in companies:
+#     get_data(company)
+with ThreadPoolExecutor() as executor:
+    executor.map(get_data, companies)
+        
 
 # uploads documents to MongoDb
 client = pymongo.MongoClient(os.environ.get("DB_URL"))
