@@ -36,11 +36,9 @@ session.headers = {
         'Sec-Fetch-Site': 'same-origin',
         'TE': 'trailers',
     }
+page_to_scrape= webdriver.Chrome(ChromeDriverManager().install())
 
-
-# browser_driver = Service('/usr/local/bin/chromedriver').
-# browser_driver = webdriver.Chrome(ChromeDriverManager().install())
-page_to_scrape = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
+#page_to_scrape = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
 page_to_scrape.get("https://mymoneyja.com/login")
 email = page_to_scrape.find_element(By.NAME, "email")
 password = page_to_scrape.find_element(By.NAME, "password")
@@ -123,8 +121,8 @@ def get_data(company):
 
 
 
-# for company in companies:
-#     get_data(company)
+for company in companies:
+     get_data(company)
 def scraper(event, context):
     with ThreadPoolExecutor() as executor:
         executor.map(get_data, companies)
@@ -137,7 +135,7 @@ coll = db["companies"]
 
 x= coll.delete_many({})
 print(x)
-coll.insert_one({"name": "meta", "last_updated": int(time.time())*1000})
 y = coll.insert_many(documents)
 print(y)
+coll.update_one({"name": "meta"}, {"$set": {"last_updated": int(time.time())*1000}})  
 
