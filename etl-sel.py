@@ -48,7 +48,7 @@ password.send_keys(os.environ.get("PASSWORD"))
 page_to_scrape.find_element(By.CSS_SELECTOR, "body > div > div > form > div:nth-child(4) > button").click()
 time.sleep(3)
 page_to_scrape.find_element(By.CSS_SELECTOR, "a.w-full:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3)").click()
-time.sleep(5)
+time.sleep(3)
 selCookies = page_to_scrape.get_cookies()
 #store the headers in the session
 for request in page_to_scrape.requests:
@@ -104,6 +104,13 @@ def get_data(company):
     key["ohlc"] = stock_data["props"]["company"]["data"]["ohlc"]
     key["volume"] = stock_data["props"]["company"]["data"]["volume"]
     
+    key["next_report"] = stock_data["props"]["company"]["next_report"]
+    key["metrics"] = stock_data["props"]["company"]["metrics"]
+    key["corporate_actions"] = stock_data["props"]["company"]["corporate_actions"]
+    key["financials"] = stock_data["props"]["company"]["data"]["financial"]
+    key["news"] = stock_data["props"]["news"]
+    key["financialReports"] = stock_data["props"]["financialReports"]
+   
     stockChartData = []
     stockChartData.append([key["name"], key["ticker"], key["blurb"]])
     for i in range(len(stock_data["props"]["company"]["data"]["ohlc"])):
@@ -121,15 +128,14 @@ def get_data(company):
 
 
 
-for company in companies:
-     get_data(company)
+
 def scraper(event, context):
     with ThreadPoolExecutor() as executor:
         executor.map(get_data, companies)
         
-
+# scraper("event", "context")
 # uploads documents to MongoDb
-client = pymongo.MongoClient(os.environ.get("DB_URL"))
+client = pymongo.MongoClient(os.environ.get("DB_URL"),  )
 db = client["jse"]
 coll = db["companies"]
 
