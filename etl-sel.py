@@ -1,3 +1,4 @@
+
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -7,12 +8,17 @@ from requests.sessions import Request
 import pymongo
 import boto3
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from seleniumwire import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.utils import ChromeType
 import time
 from concurrent.futures import ThreadPoolExecutor
+from tempfile import mkdtemp
+# import sys
+# path = 'driver/chromedriver'
+# sys.path.append(path)
 
 load_dotenv()
 s3 = boto3.resource('s3')
@@ -36,54 +42,77 @@ session.headers = {
         'Sec-Fetch-Site': 'same-origin',
         'TE': 'trailers',
     }
-page_to_scrape= webdriver.Chrome(ChromeDriverManager().install())
-
-#page_to_scrape = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
-page_to_scrape.get("https://mymoneyja.com/login")
-email = page_to_scrape.find_element(By.NAME, "email")
-password = page_to_scrape.find_element(By.NAME, "password")
-email.send_keys(os.environ.get("EMAIL"))
-password.send_keys(os.environ.get("PASSWORD"))
-
-page_to_scrape.find_element(By.CSS_SELECTOR, "body > div > div > form > div:nth-child(4) > button").click()
-time.sleep(3)
-page_to_scrape.find_element(By.CSS_SELECTOR, "a.w-full:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3)").click()
-time.sleep(3)
-selCookies = page_to_scrape.get_cookies()
-#store the headers in the session
-for request in page_to_scrape.requests:
-    if request.headers['x-xsrf-token']:
-        del session.headers['Referer'] 
-        del session.headers['X-XSRF-TOKEN'] 
-        del session.headers['User-Agent'] 
-        del session.headers['X-Inertia-Version'] 
-        session.headers['Referer'] = request.headers['referer']
-        session.headers['X-XSRF-TOKEN'] = request.headers['x-xsrf-token']
-        session.headers['User-Agent'] = request.headers['user-agent']
-        session.headers['X-Inertia-Version'] = request.headers['x-inertia-version']
-        
-        
-#store the cookies in the session
-for cookie in selCookies:
-    session.cookies[cookie["name"]] = cookie["value"]
 
 
-time.sleep(5)
 
-response = session.get(
-    "https://mymoneyja.com/stock/138SL", 
-)
+def initailize_scraper():
+    # os.environ['WDM_LOCAL'] = '1'
+    #page_to_scrape= webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
-# get scaped data for tickers
-stock_data = json.loads(response.content)
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-dev-tools')
+    chrome_options.add_argument('--remote-debugging-port=9222')
+    chrome_options.add_argument('--window-size=1280x1696')
+    chrome_options.add_argument('--user-data-dir=/tmp/chrome-user-data')
+    chrome_options.add_argument('--single-process')
+    chrome_options.add_argument("--no-zygote")
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.binary_location = "/opt/chrome/chrome"
+    
+ 
+    page_to_scrape  = webdriver.Chrome("/opt/chromedriver", options=chrome_options)
+
+   
+    
+    # page_to_scrape= webdriver.Chrome(executable_path="./driver/chromedriver", options=options)
+    page_to_scrape.get("https://mymoneyja.com/login")
+    email = page_to_scrape.find_element(By.NAME, "email")
+    password = page_to_scrape.find_element(By.NAME, "password")
+    email.send_keys(os.environ.get("EMAIL"))
+    password.send_keys(os.environ.get("PASSWORD"))
+
+    page_to_scrape.find_element(By.CSS_SELECTOR, "body > div > div > form > div:nth-child(4) > button").click()
+    time.sleep(3)
+    page_to_scrape.find_element(By.CSS_SELECTOR, "a.w-full:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3)").click()
+    time.sleep(3)
+    selCookies = page_to_scrape.get_cookies()
+    #store the headers in the session
+    for request in page_to_scrape.requests:
+        if request.headers['x-xsrf-token']:
+            del session.headers['Referer'] 
+            del session.headers['X-XSRF-TOKEN'] 
+            del session.headers['User-Agent'] 
+            del session.headers['X-Inertia-Version'] 
+            session.headers['Referer'] = request.headers['referer']
+            session.headers['X-XSRF-TOKEN'] = request.headers['x-xsrf-token']
+            session.headers['User-Agent'] = request.headers['user-agent']
+            session.headers['X-Inertia-Version'] = request.headers['x-inertia-version']
+            
+            
+    #store the cookies in the session
+    for cookie in selCookies:
+        session.cookies[cookie["name"]] = cookie["value"]
+
+    time.sleep(5)
+
+
+def gen_company_list():
+    response = session.get("https://mymoneyja.com/stock/138SL")
+
+    # get scaped data for tickers
+    stock_data = json.loads(response.content)
+
+
+    # saves the companies tickers in a dictionary
+    for comp in stock_data["props"]["companies"]:
+        companies.append(comp["ticker"])
+
 
 companies = ["138SL"]
-
-# saves the companies tickers in a dictionary
-for comp in stock_data["props"]["companies"]:
-    companies.append(comp["ticker"])
-
-
 documents = []
 
 # populates dictionary with trade data
@@ -129,19 +158,24 @@ def get_data(company):
 
 
 
+def store_mongo():
+    # uploads documents to MongoDb
+    client = pymongo.MongoClient(os.environ.get("DB_URL"),  )
+    db = client["jse"]
+    coll = db["companies"]
+
+    x= coll.delete_many({})
+    print(x)
+    y = coll.insert_many(documents)
+    print(y)
+    coll.update_one({"name": "meta"}, {"$set": {"last_updated": int(time.time())*1000}})  
+
+
 def scraper(event, context):
+    initailize_scraper()
+    gen_company_list()
     with ThreadPoolExecutor() as executor:
         executor.map(get_data, companies)
-        
+    store_mongo()
+
 # scraper("event", "context")
-# uploads documents to MongoDb
-client = pymongo.MongoClient(os.environ.get("DB_URL"),  )
-db = client["jse"]
-coll = db["companies"]
-
-x= coll.delete_many({})
-print(x)
-y = coll.insert_many(documents)
-print(y)
-coll.update_one({"name": "meta"}, {"$set": {"last_updated": int(time.time())*1000}})  
-
