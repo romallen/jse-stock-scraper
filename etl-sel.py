@@ -1,4 +1,7 @@
 
+from asyncio.log import logger
+from decimal import Decimal
+import shutil
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -16,13 +19,11 @@ from webdriver_manager.utils import ChromeType
 import time
 from concurrent.futures import ThreadPoolExecutor
 from tempfile import mkdtemp
-# import sys
-# path = 'driver/chromedriver'
-# sys.path.append(path)
+
 
 load_dotenv()
 s3 = boto3.resource('s3')
-
+dynamodb = boto3.resource('dynamodb')
 session = requests.Session()
 
 session.headers = {
@@ -46,30 +47,20 @@ session.headers = {
 
 
 def initailize_scraper():
-    # os.environ['WDM_LOCAL'] = '1'
-    #page_to_scrape= webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu-sandbox')
+    options.add_argument("--single-process")
+    options.add_argument('window-size=1920x1080')
+    options.add_argument(
+        '"user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"')
 
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--disable-gpu')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--disable-dev-tools')
-    chrome_options.add_argument('--remote-debugging-port=9222')
-    chrome_options.add_argument('--window-size=1280x1696')
-    chrome_options.add_argument('--user-data-dir=/tmp/chrome-user-data')
-    chrome_options.add_argument('--single-process')
-    chrome_options.add_argument("--no-zygote")
-    chrome_options.add_argument('--ignore-certificate-errors')
-    chrome_options.binary_location = "/opt/chrome/chrome"
-    
- 
-    page_to_scrape  = webdriver.Chrome("/opt/chromedriver", options=chrome_options)
-
-   
-    
-    # page_to_scrape= webdriver.Chrome(executable_path="./driver/chromedriver", options=options)
+    page_to_scrape= webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     page_to_scrape.get("https://mymoneyja.com/login")
+    
     email = page_to_scrape.find_element(By.NAME, "email")
     password = page_to_scrape.find_element(By.NAME, "password")
     email.send_keys(os.environ.get("EMAIL"))
@@ -80,6 +71,7 @@ def initailize_scraper():
     page_to_scrape.find_element(By.CSS_SELECTOR, "a.w-full:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3)").click()
     time.sleep(3)
     selCookies = page_to_scrape.get_cookies()
+   
     #store the headers in the session
     for request in page_to_scrape.requests:
         if request.headers['x-xsrf-token']:
@@ -110,14 +102,16 @@ def gen_company_list():
     # saves the companies tickers in a dictionary
     for comp in stock_data["props"]["companies"]:
         companies.append(comp["ticker"])
+        
+    companies_list["companies"] =  stock_data["props"]["companies"]
 
 
 companies = ["138SL"]
 documents = []
-
+companies_list = {}
 # populates dictionary with trade data
 def get_data(company):
-    print(company)
+    print("Scraping: " + company)
     response2 = session.get(
         f"https://mymoneyja.com/stock/{company}",
        
@@ -129,7 +123,7 @@ def get_data(company):
     key["name"] = stock_data["props"]["company"]["name"]
     key["ticker"] = stock_data["props"]["company"]["ticker"]
     key["blurb"] = stock_data["props"]["company"]["blurb"]
-    #key["close_prices"] = stock_data["props"]["company"]["data"]["close_prices"]
+  
     key["ohlc"] = stock_data["props"]["company"]["data"]["ohlc"]
     key["volume"] = stock_data["props"]["company"]["data"]["volume"]
     
@@ -139,22 +133,27 @@ def get_data(company):
     key["financials"] = stock_data["props"]["company"]["data"]["financial"]
     key["news"] = stock_data["props"]["news"]
     key["financialReports"] = stock_data["props"]["financialReports"]
-   
     stockChartData = []
-    stockChartData.append([key["name"], key["ticker"], key["blurb"]])
+    # stockChartData.append([key["name"], key["ticker"], key["blurb"]])
     for i in range(len(stock_data["props"]["company"]["data"]["ohlc"])):
         price = key["ohlc"][i]
         vol = key["volume"][i]["volume"]
         price.append(vol)
         stockChartData.append(price)
     key["ohlcv"]= stockChartData
+    # stockChartData.append([key["next_report"], key["metrics"], key["corporate_actions"], key["financials"], key["news"], key["financialReports"]])
+
     documents.append(key)
     del key["ohlc"]
     del key["volume"]
-        
-    s3object = s3.Object(os.environ.get("S3_BUCKET"), f'jsonv2/{company}.json')
-    s3object.put( Body=(bytes(json.dumps(stockChartData).encode('UTF-8'))), ContentType='application/json' )
+    try :
+        s3object = s3.Object(os.environ.get("S3_BUCKET"), f'jsonv3/{company}.json')
+        response = s3object.put( Body=(bytes(json.dumps(key).encode('UTF-8'))), ContentType='application/json' )
+        print(response)
 
+    except Exception as e:
+        print("error: " + str(e))
+        
 
 
 
@@ -167,15 +166,32 @@ def store_mongo():
     x= coll.delete_many({})
     print(x)
     y = coll.insert_many(documents)
+    #y = coll.update_many({}, {'$set': {'data': documents}}, upsert=True)
     print(y)
-    coll.update_one({"name": "meta"}, {"$set": {"last_updated": int(time.time())*1000}})  
+    z =coll.update_one({"name": "meta"}, {"$set": {"last_updated": int(time.time())*1000, "companies": companies}}, upsert=True)
+    print(z)
+    
+    
+def store_dynamo(companyDocuments):
+    table = dynamodb.Table('jse')
+    
+    companies =json.loads(json.dumps(companyDocuments), parse_float=Decimal)
 
+    for doc in companies:
+        ticker = doc["ticker"]
+        print("Storing: ", ticker) 
+        table.put_item(Item=doc)
+  
+    
 
-def scraper(event, context):
+def scraper(event, context): 
     initailize_scraper()
     gen_company_list()
     with ThreadPoolExecutor() as executor:
         executor.map(get_data, companies)
-    store_mongo()
-
-# scraper("event", "context")
+    # store_mongo()
+    # store_dynamo(documents)
+    
+    s3object = s3.Object(os.environ.get("S3_BUCKET"), f'jsonv3/companies_list.json')
+    response = s3object.put( Body=(bytes(json.dumps(companies_list).encode('UTF-8'))), ContentType='application/json' )
+scraper("event", "context")
